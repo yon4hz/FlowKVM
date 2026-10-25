@@ -1,0 +1,8 @@
+*.old*.exe
+flowkvm.json
+test_out.txt
+test_err.txt
+srv_out.txt
+srv_err.txt
+cli_out.txt
+cli_err.txt
