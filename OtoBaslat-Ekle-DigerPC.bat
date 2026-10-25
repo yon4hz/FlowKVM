@@ -8,7 +8,7 @@ if %errorLevel% neq 0 (
 
 cd /d "%~dp0"
 
-:: 1. Windows Gorev Zamanlayiciya En Yuksek Yetkiyle (Metin2 icin Yonetici + Penceresiz + UAC sormadan) ekle
+:: 1. Windows Gorev Zamanlayiciya En Yuksek Yetkiyle (Yonetici + Penceresiz + UAC sormadan) ekle
 schtasks /Create /TN "FlowKVM_DigerPC" /TR "\"%~dp0FlowKVM-DigerPC-Gizli.exe\"" /SC ONLOGON /RL HIGHEST /F >nul 2>&1
 
 :: 2. Yedek olarak Baslangic (Startup) klasorune de ekle
@@ -22,6 +22,6 @@ start "" "%~dp0FlowKVM-DigerPC-Gizli.exe"
 echo ================================================================
 echo [TAMAM] DIGER BILGISAYAR OTOMATIK BASLATMA KURULDU VE SIMDI BASLATILDI!
 echo Bilgisayari her actiginizda hicbir pencere veya onay sormadan
-echo arka planda Yonetici yetkisiyle (Metin2 uyumlu) otomatik calisacaktir.
+echo arka planda Yonetici yetkisiyle otomatik calisacaktir.
 echo ================================================================
 pause

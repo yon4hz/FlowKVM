@@ -255,7 +255,7 @@ func KeepDisplayAwake() {
 	procSetThreadExecutionState.Call(ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED)
 }
 
-// InjectMouseMove moves the cursor via SetCursorPos, and when right/middle button is held (Metin2 camera)
+// InjectMouseMove moves the cursor via SetCursorPos, and when right/middle button is held (3D camera)
 // sends relative SendInput movement without triggering antivirus SendInput-flood heuristics.
 func InjectMouseMove(x, y, dx, dy, screenW, screenH int32) {
 	clientLastX.Store(x)
@@ -274,7 +274,7 @@ func InjectMouseMove(x, y, dx, dy, screenW, screenH int32) {
 }
 
 func InjectMouseButton(action byte, xData uint32) {
-	// Update pure-Go tracked button state and ensure cursor position is synced for games like Metin2
+	// Update pure-Go tracked button state and ensure cursor position is synced for DirectInput games
 	x, y := clientLastX.Load(), clientLastY.Load()
 	w, h := GetScreenSize()
 	if w > 1 && h > 1 && (x > 0 || y > 0) {
