@@ -16,5 +16,5 @@ go build -tags clientonly -o FlowKVM-DigerPC.exe .
 go build -tags clientonly -ldflags="-H=windowsgui" -o FlowKVM-DigerPC-Gizli.exe .
 go build -o FlowKVM.exe .
 
-echo [✓] Tum .exe dosyalari basariyla derlendi!
+echo [TAMAM] Tum .exe dosyalari basariyla derlendi!
 pause

@@ -11,5 +11,5 @@ schtasks /Delete /TN "FlowKVM_DigerPC" /F >nul 2>&1
 set "STARTUP=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
 del /F /Q "%STARTUP%\FlowKVM-AnaPC.lnk" >nul 2>&1
 del /F /Q "%STARTUP%\FlowKVM-DigerPC.lnk" >nul 2>&1
-echo [✓] FlowKVM Windows otomatik baslangictan tamamen kaldirildi.
+echo [TAMAM] FlowKVM Windows otomatik baslangictan tamamen kaldirildi.
 pause

@@ -20,7 +20,7 @@ taskkill /F /IM FlowKVM-DigerPC-Gizli.exe >nul 2>&1
 start "" "%~dp0FlowKVM-DigerPC-Gizli.exe"
 
 echo ================================================================
-echo [✓] DIGER BILGISAYAR OTOMATIK BASLATMA KURULDU VE SIMDI BASLATILDI!
+echo [TAMAM] DIGER BILGISAYAR OTOMATIK BASLATMA KURULDU VE SIMDI BASLATILDI!
 echo Bilgisayari her actiginizda hicbir pencere veya onay sormadan
 echo arka planda Yonetici yetkisiyle (Metin2 uyumlu) otomatik calisacaktir.
 echo ================================================================
