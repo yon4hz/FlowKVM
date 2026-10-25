@@ -43,14 +43,14 @@ func (c *Client) Start() error {
 	localIPs := getLocalIPv4s()
 
 	fmt.Println("================================================================")
-	fmt.Printf("  FlowKVM - DİĞER BİLGİSAYAR (CLIENT) AKTİF [%s]\n", hostname)
+	fmt.Printf("  FlowKVM - %s [%s]\n", T("DİĞER BİLGİSAYAR (CLIENT) AKTİF", "SECOND PC (CLIENT) ACTIVE"), hostname)
 	fmt.Println("================================================================")
-	fmt.Printf("  Ekran Çözünürlüğü       : %dx%d\n", w, h)
-	fmt.Printf("  Bu PC'nin IP Adresleri  : %s (Port: %d)\n", strings.Join(localIPs, ", "), c.tcpPort)
-	fmt.Println("  USB Tethering / NAT Modu: Aktif (Çift Yönlü Bağlantı Desteği)")
-	fmt.Println("  Timeout Koruması        : Aktif (15sn Tolerans + Oto-Reconnect)")
+	fmt.Printf("  %-24s: %dx%d\n", T("Ekran Çözünürlüğü", "Screen Resolution"), w, h)
+	fmt.Printf("  %-24s: %s (Port: %d)\n", T("Bu PC'nin IP Adresleri", "Local IP Addresses"), strings.Join(localIPs, ", "), c.tcpPort)
+	fmt.Printf("  %-24s: %s\n", T("USB Tethering / NAT Modu", "USB Tethering / NAT Mode"), T("Aktif (Çift Yönlü Bağlantı)", "Active (Bidirectional)"))
+	fmt.Printf("  %-24s: %s\n", T("Timeout Koruması", "Timeout Protection"), T("Aktif (15sn Tolerans + Oto-Reconnect)", "Active (15s Tolerance + Auto-Reconnect)"))
 	fmt.Println("================================================================")
-	fmt.Println("  [*] Ana Bilgisayar bekleniyor veya ağda aranıyor...")
+	fmt.Printf("  [*] %s\n", T("Ana Bilgisayar bekleniyor veya ağda aranıyor...", "Waiting for or searching for Main PC on network..."))
 
 	// Start Dedicated File Transfer Channel (Port 24802)
 	c.fileMgr.StartListener()
@@ -263,7 +263,7 @@ func (c *Client) handleSession(conn net.Conn) {
 		Text:   hostname,
 	})
 
-	fmt.Printf("\n[+] Ana Bilgisayara Bağlandı (%s)\n", conn.RemoteAddr().String())
+	fmt.Printf("\n[+] %s (%s)\n", T("Ana Bilgisayara Bağlandı", "Connected to Main PC"), conn.RemoteAddr().String())
 	c.lastSeq = GetClipboardSequence()
 	if remoteHost, _, err := net.SplitHostPort(conn.RemoteAddr().String()); err == nil && remoteHost != "" {
 		c.fileMgr.SetPeerIP(remoteHost, false)
@@ -318,7 +318,7 @@ func (c *Client) handleSession(conn net.Conn) {
 		case MsgPong:
 			// Heartbeat OK
 		case MsgHandshake:
-			fmt.Printf("[✓] Ana Bilgisayar Hazır: %s (%dx%d)\n", pkt.Text, pkt.Width, pkt.Height)
+			fmt.Printf("[✓] %s: %s (%dx%d)\n", T("Ana Bilgisayar Hazır", "Main PC Ready"), pkt.Text, pkt.Width, pkt.Height)
 		case MsgSwitchActive:
 			if pkt.Active {
 				sw, sh := GetScreenSize()

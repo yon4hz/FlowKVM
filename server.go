@@ -124,23 +124,26 @@ func (s *Server) Start() error {
 func (s *Server) printBanner() {
 	hostname, _ := os.Hostname()
 	ips := getLocalIPv4s()
-	edgeTR := map[string]string{
-		"left":   "SOL KENAR (Fareyi sola götürünce diğer PC'ye geçer)",
-		"right":  "SAĞ KENAR (Fareyi sağa götürünce diğer PC'ye geçer)",
-		"top":    "ÜST KENAR (Fareyi yukarı götürünce diğer PC'ye geçer)",
-		"bottom": "ALT KENAR (Fareyi aşağı götürünce diğer PC'ye geçer)",
+	edgeDesc := map[string]string{
+		"left":   T("SOL KENAR (Fareyi sola götürünce diğer PC'ye geçer)", "LEFT EDGE (Move cursor to left edge to switch)"),
+		"right":  T("SAĞ KENAR (Fareyi sağa götürünce diğer PC'ye geçer)", "RIGHT EDGE (Move cursor to right edge to switch)"),
+		"top":    T("ÜST KENAR (Fareyi yukarı götürünce diğer PC'ye geçer)", "TOP EDGE (Move cursor to top edge to switch)"),
+		"bottom": T("ALT KENAR (Fareyi aşağı götürünce diğer PC'ye geçer)", "BOTTOM EDGE (Move cursor to bottom edge to switch)"),
 	}[s.edge]
 
 	fmt.Println("================================================================")
-	fmt.Printf("  FlowKVM - ANA BİLGİSAYAR (SERVER) AKTİF [%s]\n", hostname)
+	fmt.Printf("  FlowKVM - %s [%s]\n", T("ANA BİLGİSAYAR (SERVER) AKTİF", "MAIN PC (SERVER) ACTIVE"), hostname)
 	fmt.Println("================================================================")
-	fmt.Printf("  Ekran Çözünürlüğü : %dx%d\n", s.localW, s.localH)
-	fmt.Printf("  Geçiş Yönü        : %s\n", edgeTR)
-	fmt.Printf("  Kısayol (Geçiş)   : Ctrl + Alt + S\n")
-	fmt.Printf("  Acil Geri Çağırma : Ctrl + Alt + Q  (veya Pause/Break tuşu)\n")
-	fmt.Printf("  Yerel IP Adresleri: %s (Port: %d)\n", strings.Join(ips, ", "), s.tcpPort)
+	fmt.Printf("  %-18s: %dx%d\n", T("Ekran Çözünürlüğü", "Screen Resolution"), s.localW, s.localH)
+	fmt.Printf("  %-18s: %s\n", T("Geçiş Yönü", "Switch Edge"), edgeDesc)
+	fmt.Printf("  %-18s: Ctrl + Alt + S\n", T("Kısayol (Geçiş)", "Switch Hotkey"))
+	fmt.Printf("  %-18s: Ctrl + Alt + Q  (Pause/Break)\n", T("Acil Geri Çağırma", "Failsafe Recall"))
+	fmt.Printf("  %-18s: %s (Port: %d)\n", T("Yerel IP Adresleri", "Local IP Addresses"), strings.Join(ips, ", "), s.tcpPort)
 	fmt.Println("----------------------------------------------------------------")
-	fmt.Println("  [*] Diğer bilgisayar ağda (192.168.0.x / 192.168.1.x) aranıyor...")
+	fmt.Printf("  [*] %s\n", T(
+		"Diğer bilgisayar ağda (192.168.0.x / 192.168.1.x) aranıyor...",
+		"Searching for Second PC on network (192.168.0.x / 192.168.1.x)...",
+	))
 	fmt.Println("================================================================")
 }
 
@@ -434,7 +437,9 @@ func (s *Server) verifyAndStartSession(conn net.Conn) bool {
 
 func (s *Server) handleClient(conn net.Conn, r *bufio.Reader, initHandshake Packet) {
 	remoteAddr := conn.RemoteAddr().String()
-	fmt.Printf("\n[+] BAĞLANDI: %s -> %s (%dx%d)\n", remoteAddr, initHandshake.Text, initHandshake.Width, initHandshake.Height)
+	fmt.Printf("\n[+] %s: %s -> %s (%dx%d)\n",
+		T("BAĞLANDI", "CONNECTED"),
+		remoteAddr, initHandshake.Text, initHandshake.Width, initHandshake.Height)
 
 	for len(s.sendCh) > 0 {
 		<-s.sendCh
@@ -554,10 +559,13 @@ func (s *Server) handleClient(conn net.Conn, r *bufio.Reader, initHandshake Pack
 	s.mu.Unlock()
 
 	if s.isRemote.Load() {
-		fmt.Println("[!] Bağlantı koptu - Failsafe devreye girdi, fare Ana Bilgisayara geri alındı!")
+		fmt.Println(T(
+			"[!] Bağlantı koptu - Failsafe devreye girdi, fare Ana Bilgisayara geri alındı!",
+			"[!] Connection lost - Failsafe triggered, cursor recalled to Main PC!",
+		))
 		s.forceReturnToLocal()
 	} else {
-		fmt.Printf("[!] %s bağlantısı koptu, otomatik yeniden bağlanılıyor...\n", remoteAddr)
+		fmt.Printf("[!] %s %s\n", remoteAddr, T("bağlantısı koptu, otomatik yeniden bağlanılıyor...", "disconnected, auto-reconnecting..."))
 	}
 }
 
@@ -661,7 +669,7 @@ func (s *Server) switchToRemote(entryX, entryY int32, fromHotkey bool) {
 		X:      rx,
 		Y:      ry,
 	})
-	fmt.Printf("[->] Kontrol Diğer Bilgisayara Geçti (X:%d, Y:%d)\n", rx, ry)
+	fmt.Printf("[->] %s (X:%d, Y:%d)\n", T("Kontrol Diğer Bilgisayara Geçti", "Switched Control to Second PC"), rx, ry)
 }
 
 func (s *Server) switchToLocal(returnX, returnY int32) {
@@ -679,7 +687,7 @@ func (s *Server) switchToLocal(returnX, returnY int32) {
 		Type:   MsgSwitchActive,
 		Active: false,
 	})
-	fmt.Printf("[<-] Kontrol Ana Bilgisayara Döndü (X:%d, Y:%d)\n", returnX, returnY)
+	fmt.Printf("[<-] %s (X:%d, Y:%d)\n", T("Kontrol Ana Bilgisayara Döndü", "Returned Control to Main PC"), returnX, returnY)
 }
 
 func (s *Server) forceReturnToLocal() {

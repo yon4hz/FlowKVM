@@ -244,8 +244,11 @@ func (ft *FileTransferManager) sendFiles(rootPaths []string) error {
 		return fmt.Errorf("dosya kanalı bağlı değil")
 	}
 
-	fmt.Printf("\n[Dosya Gönderiliyor] %d öğe (Toplam: %.2f MB) arka planda aktarılıyor...\n",
-		len(topNames), float64(totalBytes)/(1024*1024))
+	fmt.Printf("\n[%s] %d %s (%.2f MB)...\n",
+		T("Dosya Gönderiliyor", "Sending Files"),
+		len(topNames),
+		T("öğe arka planda aktarılıyor", "item(s) streaming in background"),
+		float64(totalBytes)/(1024*1024))
 
 	w := bufio.NewWriterSize(conn, 128*1024)
 	var hdr [16]byte
@@ -360,7 +363,7 @@ func (ft *FileTransferManager) sendFiles(rootPaths []string) error {
 		return err
 	}
 
-	fmt.Printf("[✓] Dosya Gönderimi Tamamlandı (%s)!\n", strings.Join(topNames, ", "))
+	fmt.Printf("[✓] %s (%s)!\n", T("Dosya Gönderimi Tamamlandı", "File Transfer Complete"), strings.Join(topNames, ", "))
 	return nil
 }
 
@@ -481,7 +484,9 @@ func (ft *FileTransferManager) readLoop(conn net.Conn) {
 					if ft.onClipReady != nil {
 						ft.onClipReady()
 					}
-					fmt.Printf("[✓] Dosya Panoya Hazır (%s)! Şimdi Ctrl+V ile yapıştırabilirsiniz.\n", ft.stagingDir)
+					fmt.Printf("[✓] %s (%s)!\n",
+						T("Dosya Panoya Hazır! Şimdi Ctrl+V ile yapıştırabilirsiniz", "Files Ready on Clipboard! Press Ctrl+V to paste"),
+						ft.stagingDir)
 				}
 			}
 		}

@@ -12,6 +12,7 @@ import (
 )
 
 type Config struct {
+	Lang     string `json:"lang"`      // "tr" or "en"
 	Mode     string `json:"mode"`      // "server" or "client"
 	Edge     string `json:"edge"`      // "left", "right", "top", "bottom"
 	ServerIP string `json:"server_ip"` // "auto" or IP
@@ -57,8 +58,7 @@ func saveConfig(cfg *Config) {
 func main() {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("\n[KRİTİK HATA / PANIC]: %v\n", r)
-			fmt.Println("Pencerenin kapanmaması için bekleniyor (Çıkmak için Ctrl+C)...")
+			fmt.Printf("\n[CRITICAL ERROR / KRİTİK HATA]: %v\n", r)
 			for {
 				time.Sleep(10 * time.Second)
 			}
@@ -67,21 +67,24 @@ func main() {
 
 	EnableDPIAwareness()
 
-	modeFlag := flag.String("mode", "", "Calisma modu: 'server' (Ana PC) veya 'client' (Diger PC)")
-	edgeFlag := flag.String("edge", "left", "Diger ekranin yonu: 'left' (Sol), 'right' (Sag), 'top' (Ust), 'bottom' (Alt)")
-	ipFlag := flag.String("ip", "auto", "Hedef IP adresi (varsayilan: 'auto' - otomatik ag kesfi)")
-	portFlag := flag.Int("port", DefaultTCPPort, "TCP Port numarasi")
-	resetFlag := flag.Bool("reset", false, "Kayitli ayarlari sifirla ve menuyu ac")
+	langFlag := flag.String("lang", "auto", "Language / Dil: 'auto', 'en' (English), 'tr' (Turkce)")
+	modeFlag := flag.String("mode", "", "Mode / Calisma modu: 'server' (Main PC) or 'client' (Second PC)")
+	edgeFlag := flag.String("edge", "left", "Screen edge / Ekran yonu: 'left', 'right', 'top', 'bottom'")
+	ipFlag := flag.String("ip", "auto", "Target IP / Hedef IP ('auto' for automatic LAN/NAT discovery)")
+	portFlag := flag.Int("port", DefaultTCPPort, "TCP Port")
+	resetFlag := flag.Bool("reset", false, "Reset saved config / Kayitli ayarlari sifirla")
 	flag.Parse()
 
+	SetLanguage(*langFlag)
+
 	cfg := &Config{
+		Lang:     currentLang,
 		Mode:     strings.ToLower(strings.TrimSpace(*modeFlag)),
 		Edge:     strings.ToLower(strings.TrimSpace(*edgeFlag)),
 		ServerIP: strings.TrimSpace(*ipFlag),
 		Port:     *portFlag,
 	}
 
-	// If built as client-only binary (FlowKVM-DigerPC.exe), always run directly in client mode!
 	exeName := strings.ToLower(filepath.Base(os.Args[0]))
 	if DefaultBuildMode == "client" || strings.Contains(exeName, "diger") || strings.Contains(exeName, "client") {
 		cfg.Mode = "client"
@@ -92,7 +95,12 @@ func main() {
 	if cfg.Mode == "" && !*resetFlag {
 		if saved, ok := loadConfig(); ok {
 			cfg = saved
-			fmt.Printf("[i] Kayıtlı ayarlar yüklendi (%s).\n\n", configFilePath())
+			if *langFlag == "auto" && saved.Lang != "" {
+				SetLanguage(saved.Lang)
+			}
+			fmt.Printf("[i] %s (%s)\n\n",
+				T("Kayıtlı ayarlar yüklendi", "Loaded saved configuration"),
+				configFilePath())
 		}
 	}
 
@@ -100,12 +108,33 @@ func main() {
 
 	if cfg.Mode != "server" && cfg.Mode != "client" {
 		fmt.Println("================================================================")
-		fmt.Println("         FlowKVM - Kesintisiz Klavye & Fare Paylaşımı           ")
+		fmt.Println("   FlowKVM - Seamless Software KVM & File Sharing (EN / TR)     ")
 		fmt.Println("================================================================")
-		fmt.Println("Bu bilgisayarı hangi rolde kullanmak istiyorsunuz?")
-		fmt.Println("  [1] ANA BİLGİSAYAR (Server) - Fiziksel fare ve klavyenin takılı olduğu PC")
-		fmt.Println("  [2] DİĞER BİLGİSAYAR (Client) - Kontrol edilecek 2. PC")
-		fmt.Print("\nSeçiminiz (1 veya 2): ")
+		fmt.Println("Select Language / Dil Seçiniz:")
+		fmt.Println("  [1] English")
+		fmt.Println("  [2] Türkçe")
+		fmt.Print("\nChoice / Seçim (Enter = Auto): ")
+		langChoice, _ := reader.ReadString('\n')
+		langChoice = strings.TrimSpace(langChoice)
+		if langChoice != "" {
+			SetLanguage(langChoice)
+		}
+		cfg.Lang = currentLang
+
+		fmt.Println("\n----------------------------------------------------------------")
+		fmt.Println(T(
+			"Bu bilgisayarı hangi rolde kullanmak istiyorsunuz?",
+			"Which role should this computer run as?",
+		))
+		fmt.Println(T(
+			"  [1] ANA BİLGİSAYAR (Server) - Fiziksel fare ve klavyenin takılı olduğu PC",
+			"  [1] MAIN PC (Server) - Computer with physical mouse and keyboard attached",
+		))
+		fmt.Println(T(
+			"  [2] DİĞER BİLGİSAYAR (Client) - Kontrol edilecek 2. PC",
+			"  [2] SECOND PC (Client) - Computer to be controlled remotely",
+		))
+		fmt.Print(T("\nSeçiminiz (1 veya 2): ", "\nYour choice (1 or 2): "))
 		choice, _ := reader.ReadString('\n')
 		choice = strings.TrimSpace(choice)
 
@@ -114,13 +143,32 @@ func main() {
 			cfg.ServerIP = "auto"
 		} else {
 			cfg.Mode = "server"
-			cfg.Edge = "left"
+			fmt.Println(T(
+				"\nDiğer bilgisayar ekranınızın hangi tarafında duruyor?",
+				"\nWhich side of your main screen is the second computer located on?",
+			))
+			fmt.Println(T("  [1] SOLDA (Varsayılan)", "  [1] LEFT (Default)"))
+			fmt.Println(T("  [2] SAĞDA", "  [2] RIGHT"))
+			fmt.Println(T("  [3] ÜSTTE", "  [3] TOP"))
+			fmt.Println(T("  [4] ALTTA", "  [4] BOTTOM"))
+			fmt.Print(T("\nSeçiminiz (Enter = 1): ", "\nYour choice (Enter = 1): "))
+			edgeChoice, _ := reader.ReadString('\n')
+			edgeChoice = strings.TrimSpace(edgeChoice)
+			switch edgeChoice {
+			case "2":
+				cfg.Edge = "right"
+			case "3":
+				cfg.Edge = "top"
+			case "4":
+				cfg.Edge = "bottom"
+			default:
+				cfg.Edge = "left"
+			}
 		}
 		saveConfig(cfg)
 		fmt.Println()
 	}
 
-	// Never exit or close the window! If Start() ever returns an error, retry automatically.
 	for {
 		var err error
 		if cfg.Mode == "server" {
@@ -132,7 +180,7 @@ func main() {
 		}
 
 		if err != nil {
-			fmt.Printf("\n[UYARI] %v - 2 saniye içinde yeniden deneniyor...\n", err)
+			fmt.Printf("\n[!] %v - %s\n", err, T("2 saniye içinde yeniden deneniyor...", "Retrying in 2 seconds..."))
 		}
 		time.Sleep(2 * time.Second)
 	}
